@@ -1,23 +1,26 @@
-"""Emits the robot wedding vow for One-Line Robot Wedding Vows (160 chars max)."""
-import json
+"""Robot wedding vow, one line, sealed and read back."""
 import os
 
-
-class Vow:
-    line = ("I promise to hold your hand until one of our batteries dies, "
-            "and mine is the one under recall.")
-
-    @classmethod
-    def write(cls, folder):
-        os.makedirs(folder, exist_ok=True)
-        out = os.path.join(folder, "entry.txt")
-        with open(out, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(cls.line + "\n")
-        return out
+VOW = ("I promise to hold your hand until one of our batteries dies, "
+       "and mine is the one under recall.")
+SEAL = {"code": "vow2", "ring": "titanium"}
+BAND = "spare-cell"
 
 
-def receipt(path):
-    return {"path": path, "chars": len(Vow.line)}
+def seal(root):
+    base = root or "output"
+    os.makedirs(base, exist_ok=True)
+    path = os.path.join(base, "entry.txt")
+    raw = (VOW + "\n").encode("utf-8")
+    with open(path, "wb") as f:
+        f.write(raw)
+    with open(path, "rb") as f:
+        kept = f.read().decode("utf-8").strip()
+    return kept, len(kept)
 
 
-print(json.dumps(receipt(Vow.write(os.environ.get("MAKEFUN_OUTPUT_DIR") or "output")), ensure_ascii=False))
+kept, n = seal(os.environ.get("MAKEFUN_OUTPUT_DIR"))
+if kept != VOW:
+    raise SystemExit("vow came back garbled")
+print("{code} ring {ring} vow {n} chars sealed".format(n=n, **SEAL))
+print("band:", BAND, "charged for the reception")
